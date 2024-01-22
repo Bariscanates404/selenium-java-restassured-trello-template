@@ -10,7 +10,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import utilities.ConfigReader;
 
 
-public class TrelloTest {
+public class TrelloTestUnitest {
 
     /**
      * Creates a new Trello board.
