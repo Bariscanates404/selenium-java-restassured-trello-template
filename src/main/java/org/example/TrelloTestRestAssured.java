@@ -10,6 +10,21 @@ import utilities.ConfigReader;
 
 import static io.restassured.RestAssured.given;
 
+
+/**
+ * This class contains TestNG test methods using RestAssured to test various Trello API functionalities.
+ * The test scenarios cover actions such as creating Trello boards, lists, and cards, updating cards, and deleting boards and cards.
+ * Utilizing TestNG annotations for test execution and the RestAssured library for API requests, the class emphasizes flexibility
+ * through dynamic variable handling using the TestNG `ISuite` object.
+
+ * The `ISuite` object allows the dynamic passing of parameters from the suite XML file to the test class, facilitating reusable
+ * and configurable test scenarios.
+
+ * When a test starts, it begins by creating a Trello board using an API request. Subsequent actions include creating lists,
+ * adding cards to the lists, updating card details randomly, and finally, deleting the created boards and cards. Each test method
+ * in this class is designed to execute a specific step in this sequence, and dependencies between methods ensure a logical order
+ * of execution.
+ */
 public class TrelloTestRestAssured {
 
     private static final String API_TOKEN = ConfigReader.getProperty("APIToken");
@@ -144,14 +159,14 @@ public class TrelloTestRestAssured {
         ISuite suite = context.getSuite();
         // Retrieve random card ID, list ID, and create an update request with new details
         int tmp = (int) (Math.random() * 1) + 1;
-        String cardID = tmp == 1 ? (String) suite.getAttribute("cardId1") : (String) suite.getAttribute("cardId2");
+        String randomCardID = tmp == 1 ? (String) suite.getAttribute("cardId1") : (String) suite.getAttribute("cardId2");
         String listId = (String) suite.getAttribute("listId");
 
         given()
                 .contentType(ContentType.JSON)
-                .queryParams("id", cardID, "name", "Trello Card Updated", "color", "blue", "idList", listId, "key", API_KEY, "token", API_TOKEN)
+                .queryParams("id", randomCardID, "name", "Trello Card Updated", "color", "blue", "idList", listId, "key", API_KEY, "token", API_TOKEN)
                 .when()
-                .put(CARDS_ENDPOINT + "/" + cardID)
+                .put(CARDS_ENDPOINT + "/" + randomCardID)
                 .then()
                 .statusCode(200);
     }
