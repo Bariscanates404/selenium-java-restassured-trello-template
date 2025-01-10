@@ -1,29 +1,28 @@
-package org.example;
+package api.Tests.TrelloChainApiTest;
 
-import org.testng.annotations.Test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.testng.annotations.Test;
 import utilities.ConfigReader;
 
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
  * This class contains TestNG test methods using the Unirest library to interact with the Trello API.
  * The test suite covers the end-to-end process of creating a Trello board, lists, and cards, updating card details,
  * and finally, deleting the boards and cards. Dependencies between methods ensure a sequential execution order.
-
+ *
  * Test methods use configuration properties for Trello board name, list names, API key, and token, allowing flexibility
  * and reusability. The Unirest library facilitates HTTP requests to the Trello API, and dynamic handling of Trello
  * entities' IDs is managed through configuration properties.
-
+ *
  * The random update of a Trello card's name and color adds variability to the test scenarios. After test execution,
  * the class cleans up by deleting the created Trello cards and boards to maintain a clean test environment.
-
+ *
  * When a test starts, it begins by creating a Trello board using an API request. Subsequent actions include creating lists,
  * adding cards to the lists, updating card details randomly, and finally, deleting the created boards and cards. Each test method
  * in this class is designed to execute a specific step in this sequence, and dependencies between methods ensure a logical order
@@ -36,6 +35,13 @@ public class TrelloTestUnitest {
     private static final String LISTS_ENDPOINT = BASE_URL + "/lists";
     private static final String CARDS_ENDPOINT = BASE_URL + "/cards";
 
+    private static final String API_KEY = ConfigReader.getProperty("APIKey");
+    private static final String API_TOKEN = ConfigReader.getProperty("APIToken");
+    private static final String BOARD_NAME = ConfigReader.getProperty("boardName");
+    private static final String LIST_NAME = ConfigReader.getProperty("listName");
+    private static final String CARD_NAME1 = ConfigReader.getProperty("cardName1");
+    private static final String CARD_NAME2 = ConfigReader.getProperty("cardName2");
+
     /**
      * Creates a new Trello board.
      * Uses the configuration properties for board name, API key, and token.
@@ -44,9 +50,9 @@ public class TrelloTestUnitest {
     @Test(priority = 1)
     public void createTrelloBoard() throws UnirestException {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", ConfigReader.getProperty("boardName"));
-        params.put("key", ConfigReader.getProperty("APIKey"));
-        params.put("token", ConfigReader.getProperty("APIToken"));
+        params.put("name", BOARD_NAME);
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
 
         HttpResponse<String> response = sendPostRequest(BOARD_ENDPOINT, params);
         JsonObject jsonResponse = JsonParser.parseString(response.getBody()).getAsJsonObject();
@@ -61,10 +67,10 @@ public class TrelloTestUnitest {
     @Test(dependsOnMethods = "createTrelloBoard")
     public void createTrelloListOnBoard() throws UnirestException, InterruptedException {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", ConfigReader.getProperty("listName"));
+        params.put("name", LIST_NAME);
         params.put("idBoard", ConfigReader.getProperty("boardId"));
-        params.put("key", ConfigReader.getProperty("APIKey"));
-        params.put("token", ConfigReader.getProperty("APIToken"));
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
 
         HttpResponse<String> response = sendPostRequest(LISTS_ENDPOINT, params);
         JsonObject jsonResponse = JsonParser.parseString(response.getBody()).getAsJsonObject();
@@ -79,10 +85,10 @@ public class TrelloTestUnitest {
     @Test(dependsOnMethods = "createTrelloListOnBoard")
     public void createTrelloCard1OnList() throws UnirestException, InterruptedException {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", ConfigReader.getProperty("cardName1"));
+        params.put("name", CARD_NAME1);
         params.put("idList", ConfigReader.getProperty("listId"));
-        params.put("key", ConfigReader.getProperty("APIKey"));
-        params.put("token", ConfigReader.getProperty("APIToken"));
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
 
         HttpResponse<String> response = sendPostRequest(CARDS_ENDPOINT, params);
         JsonObject jsonResponse = JsonParser.parseString(response.getBody()).getAsJsonObject();
@@ -97,10 +103,10 @@ public class TrelloTestUnitest {
     @Test(dependsOnMethods = "createTrelloCard1OnList")
     public void createTrelloCard2OnList() throws UnirestException, InterruptedException {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", ConfigReader.getProperty("cardName2"));
+        params.put("name", CARD_NAME2);
         params.put("idList", ConfigReader.getProperty("listId"));
-        params.put("key", ConfigReader.getProperty("APIKey"));
-        params.put("token", ConfigReader.getProperty("APIToken"));
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
 
         HttpResponse<String> response = sendPostRequest(CARDS_ENDPOINT, params);
         JsonObject jsonResponse = JsonParser.parseString(response.getBody()).getAsJsonObject();
@@ -114,13 +120,7 @@ public class TrelloTestUnitest {
      */
     @Test(dependsOnMethods = "createTrelloCard2OnList")
     public void updateTrelloCardOnListRandomly() throws UnirestException, InterruptedException {
-        String cardID;
-        int tmp = (int) (Math.random() * 1) + 1;
-        if (tmp == 1) {
-            cardID = ConfigReader.getProperty("cardId1");
-        } else {
-            cardID = ConfigReader.getProperty("cardId2");
-        }
+        String cardID = Math.random() < 0.5 ? ConfigReader.getProperty("cardId1") : ConfigReader.getProperty("cardId2");
         String urlUpdated = CARDS_ENDPOINT + "/" + cardID;
 
         Map<String, Object> params = new HashMap<>();
@@ -128,8 +128,8 @@ public class TrelloTestUnitest {
         params.put("name", "Trello Card Updated");
         params.put("color", "blue");
         params.put("idList", ConfigReader.getProperty("listId"));
-        params.put("key", ConfigReader.getProperty("APIKey"));
-        params.put("token", ConfigReader.getProperty("APIToken"));
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
 
         sendPutRequest(urlUpdated, params);
     }
@@ -141,7 +141,13 @@ public class TrelloTestUnitest {
     @Test(dependsOnMethods = "updateTrelloCardOnListRandomly")
     public void deleteTrelloCardOnList() throws UnirestException, InterruptedException {
         String cardId = ConfigReader.getProperty("cardId1");
-        sendDeleteRequest(CARDS_ENDPOINT + "/" + cardId);
+        String urlUpdated = CARDS_ENDPOINT + "/" + cardId;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
+
+        sendDeleteRequest(urlUpdated, params);
     }
 
     /**
@@ -151,7 +157,13 @@ public class TrelloTestUnitest {
     @Test(dependsOnMethods = "deleteTrelloCardOnList")
     public void deleteTrelloCard2OnList() throws UnirestException, InterruptedException {
         String cardId = ConfigReader.getProperty("cardId2");
-        sendDeleteRequest(CARDS_ENDPOINT + "/" + cardId);
+        String urlUpdated = CARDS_ENDPOINT + "/" + cardId;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
+
+        sendDeleteRequest(urlUpdated, params);
     }
 
     /**
@@ -161,7 +173,13 @@ public class TrelloTestUnitest {
     @Test(dependsOnMethods = "deleteTrelloCard2OnList")
     public void deleteTrelloBoard() throws UnirestException, InterruptedException {
         String boardId = ConfigReader.getProperty("boardId");
-        sendDeleteRequest(BOARD_ENDPOINT + "/" + boardId);
+        String urlUpdated = BOARD_ENDPOINT + "/" + boardId;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("key", API_KEY);
+        params.put("token", API_TOKEN);
+
+        sendDeleteRequest(urlUpdated, params);
     }
 
     private HttpResponse<String> sendPostRequest(String url, Map<String, Object> params) throws UnirestException {
@@ -176,8 +194,9 @@ public class TrelloTestUnitest {
                 .asString();
     }
 
-    private HttpResponse<String> sendDeleteRequest(String url) throws UnirestException {
+    private HttpResponse<String> sendDeleteRequest(String url, Map<String, Object> params) throws UnirestException {
         return Unirest.delete(url)
+                .queryString(params)
                 .asString();
     }
 }
